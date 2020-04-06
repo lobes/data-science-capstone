@@ -1,0 +1,150 @@
+---
+title: "Exploratory Data Analysis"
+author: "Sam Giles"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, 
+                      comment = NA, 
+                      message = FALSE, 
+                      error = FALSE,
+                      warning = FALSE)
+
+library(tm)
+library(ggplot2)
+library(dplyr)
+set.seed(1337)
+```
+
+## Report Outline
+
+The plan is to create an online app that will predict the next word the user will want to type based on what they have already entered. This report will detail the overall structure of the text data that will be used to generate the predictions. 
+
+## The Data
+```{r explore}
+blogs <- "./data/sample/blogs_sample.txt" %>%
+    readLines()
+
+news <- "./data/sample/news_sample.txt" %>%
+    readLines()
+
+twitter <- "./data/sample/twitter_sample.txt" %>%
+    readLines()
+
+lines_blogs <- length(blogs)
+lines_news <- length(news)
+lines_twitter <- length(twitter)
+lines_total <- sum(lines_blogs, lines_news, lines_twitter)
+lines <- c(lines_blogs, lines_news, lines_twitter, lines_total)
+
+words_blogs <- sum(lengths(gregexpr("[A-z]\\W+", blogs)))
+words_news <- sum(lengths(gregexpr("[A-z]\\W+", news)))
+words_twitter <- sum(lengths(gregexpr("[A-z]\\W+", twitter)))
+words_total <- sum(words_blogs, words_news, words_twitter)
+words <- c(words_blogs, words_news, words_twitter, words_total)
+
+summ_table <- data.frame(blogs = integer(),
+                         news = integer(),
+                         twitter = integer(),
+                         total = integer())
+
+summ_table <- summ_table %>%
+    rbind(lines, words)
+
+names(summ_table) <- c("Blogs", "News", "Twitter", "Total")
+row.names(summ_table) <- c("Posts", "Words")
+```
+The text that will be used to make the prediction comes from three different sources:
+
+1. Blogs
+2. News Sites
+3. Twitter
+
+As the entire dataset is incredibly huge (over 4.2 million total posts) we will take a sample of 5000 from each (for a total of 15,000) to make the initial analysis more manageable.
+
+The basic summary statistics for the sample dataset are below:
+```{r summary}
+summ_table
+```
+This means that in our sample of 15,000 entries we have almost half a million words (over 40,000 of which are unique).
+
+## Frequency Analysis
+```{r corpus}
+library(dplyr)
+library(tm)
+
+sample_corpus <- "./data/sample" %>%
+    DirSource() %>%
+    VCorpus(readerControl = list(reader = readPlain,
+                                 language = "en"))
+
+sample_corpus <- tm_map(sample_corpus, removeNumbers)
+sample_corpus <- tm_map(sample_corpus, removePunctuation)
+sample_corpus <- tm_map(sample_corpus, stripWhitespace)
+sample_corpus <- tm_map(sample_corpus, content_transformer(tolower))
+
+tdm <- TermDocumentMatrix(sample_corpus, control = list(stopwords = TRUE))
+```
+
+One interesting feature we can observe at this point in development is to see which words are the most common from each source individually and across the whole sample. We will use the 7 most common as illustration.
+
+First, from blogs:
+``` {r}
+findMostFreqTerms(tdm, n = 7)$blogs_sample.txt
+```
+
+Second, from news:
+``` {r}
+findMostFreqTerms(tdm, n = 7)$news_sample.txt
+```
+
+Finally, from twitter:
+``` {r}
+findMostFreqTerms(tdm, n = 7)$twitter_sample.txt
+```
+
+To visualise the 7 most common terms from the three documents together, refer to the following histogram:
+```{r}
+sample_unified <- paste(sample_corpus[["blogs_sample.txt"]][["content"]],
+                        sample_corpus[["news_sample.txt"]][["content"]],
+                        sample_corpus[["twitter_sample.txt"]][["content"]],
+                        collapse = "")
+
+sample_unified <- sample_unified %>%
+    VectorSource() %>%
+    VCorpus(readerControl = list(reader = readPlain,
+                                 language = "en"))
+
+tdm_unified <- TermDocumentMatrix(sample_unified, 
+                                  control = list(stopwords = TRUE))
+
+total_freq <- tdm_unified %>%
+    findMostFreqTerms(n = 7) %>%
+    as.data.frame()
+
+y <- total_freq[,1]
+x <- rownames(total_freq) %>% 
+    factor(rownames(total_freq)) %>%
+    reorder(y)
+
+h <- ggplot(total_freq, aes(x = x,
+                            y = y, 
+                            fill = x, 
+                            colour = x)) +
+    geom_bar(stat = "identity", aes(fill = x, colour = x)) +
+    labs(title = "Highest Frequency Words from Sample",
+         x = "Word",
+         y = "Frequency") +
+    theme(legend.position = "none") +
+    scale_fill_viridis_d(direction = -1) +
+    scale_colour_viridis_d() +
+    coord_flip()
+h
+```
+
+So, the most common word from this sample is "said" and the 7th most common is "time". Interestingly, although "will" made it into the top 7 from each of the three sources it didn't make it to the number one spot overall. It was beaten by "said", which earned its place from the news. This isn't a surprise, however, considering how many news articles quote people. Whether this word ends up increasing the accuracy of the app or having the opposite effect remains to be seen but it is surely one to watch out for.
+
+## Closing Thoughts
+
+A model will be built and evaluated using this smaller sample from the larger dataset. If it reaches an acceptable level of accuracy then there is no need to increase the cost with more data.
