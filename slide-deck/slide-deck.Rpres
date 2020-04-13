@@ -1,0 +1,38 @@
+Deck Title Goes Here
+========================================================
+author: Sam Giles
+date: 13th April 2020
+autosize: true
+
+Title of First Slide
+========================================================
+
+Text goes in here.
+
+Title of Second Slide
+========================================================
+
+Add code blocks like in Rmd files.
+
+```{r}
+summary(cars)
+```
+
+Title of Third Slide
+========================================================
+
+The code blocks also take options just like in Rmd.
+
+```{r, echo=FALSE}
+plot(cars)
+```
+
+Title of Fourth Slide
+========================================================
+
+Not much more to say.
+
+Title of Fifth Slide
+========================================================
+
+Thus ends the skeleton.
