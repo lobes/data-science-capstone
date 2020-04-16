@@ -7,17 +7,28 @@ library(stringr)
 
 sample <- "./data/sample/twitter_sample.txt"
 
-ngram <- sample %>%
+twi_sample <- sample %>%
     readLines %>%
+    stri_split_boundaries(type = "sentence") %>%
+    unlist(use.names = FALSE) %>%
     tokenize_ngrams(lowercase = TRUE,
                     n = 5,
                     n_min = 2) %>%
     unlist(use.names = FALSE) %>%
     data.table
 
-names(ngram) <- c("ngram")
+## incorrect, didn't take into account sentence boundaries
+# ngram <- sample %>%
+#     readLines %>%
+#     tokenize_ngrams(lowercase = TRUE,
+#                     n = 5,
+#                     n_min = 2) %>%
+#     unlist(use.names = FALSE) %>%
+#     data.table
 
-freq <- ngram[, .N, by = "ngram"]
+names(twi_sample) <- c("ngram")
+
+freq <- twi_sample[, .N, by = "ngram"]
 
 # makes a new DT with a single column called 'end' that has the last word from the ngrams
 split <- freq[, .(start = stri_replace_last_regex(ngram, " [a-z|'|0-9]+", ""),
