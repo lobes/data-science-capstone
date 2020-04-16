@@ -3,7 +3,7 @@ library(data.table)
 library(readtext)
 library(dplyr)
 library(tokenizers)
-library(stringi)
+library(stringr)
 
 sample <- "./data/sample/twitter_sample.txt"
 
@@ -18,6 +18,10 @@ ngram <- sample %>%
 names(ngram) <- c("ngram")
 
 freq <- ngram[, .N, by = "ngram"]
+
+# makes a new DT with a single column called 'end' that has the last word from the ngrams
+split <- freq[, .(start = stri_replace_last_regex(ngram, " [a-z|'|0-9]+", ""),
+                  end = stri_extract_last_words(ngram))]
 
 # test_dt <- sample %>%
 #     readLines %>%
