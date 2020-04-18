@@ -2,6 +2,7 @@ library(data.table)
 library(dplyr)
 library(tokenizers)
 library(stringr)
+library(stringi)
 
 sample <- "./data/sample/twitter_sample.txt"
 
@@ -70,8 +71,87 @@ discount_five_gram <- function() {
     }
     # calculate leftover for each 'start' and fix the quirk again
     five_gram[, leftover := (1 - freq * disc / sum(freq)), by = start][disc == 1, leftover := 0]
-    
 }
+
+# get ready for janky copies of the 5-gram function
+discount_four_gram <- function() {
+
+    # reset discount in case function is run twice
+    four_gram[, disc := 1]
+
+    # apparently if the frequency is over 5 for the ngram then it's reliable enough
+    for (i in 5:1) { # going backwards
+        curr_freq <- i
+        next_freq <- i + 1
+
+        # do a count on rows that match the ith frequency and ith plus one
+        curr_count <- four_gram[freq == curr_freq, .N]
+        next_count <- four_gram[freq == next_freq, .N]
+
+        # calculate the discount for the ith frequency
+        curr_disc <- (next_freq / curr_freq) * (next_count / curr_count)
+
+        # kept the fix in just in case
+        four_gram[freq == curr_freq, disc := curr_disc][disc > 1, disc := 1]
+    }
+    # calculate leftover for each 'start' and fix the quirk again
+    four_gram[, leftover := (1 - freq * disc / sum(freq)), by = start][disc == 1, leftover := 0]
+}
+
+discount_three_gram <- function() {
+    
+    # reset discount in case function is run twice
+    three_gram[, disc := 1]
+    
+    # apparently if the frequency is over 5 for the ngram then it's reliable enough
+    for (i in 5:1) { # going backwards
+        curr_freq <- i
+        next_freq <- i + 1
+        
+        # do a count on rows that match the ith frequency and ith plus one
+        curr_count <- three_gram[freq == curr_freq, .N]
+        next_count <- three_gram[freq == next_freq, .N]
+        
+        # calculate the discount for the ith frequency
+        curr_disc <- (next_freq / curr_freq) * (next_count / curr_count)
+        
+        # kept the fix in just in case
+        three_gram[freq == curr_freq, disc := curr_disc][disc > 1, disc := 1]
+    }
+    # calculate leftover for each 'start' and fix the quirk again
+    three_gram[, leftover := (1 - freq * disc / sum(freq)), by = start][disc == 1, leftover := 0]
+}
+
+discount_two_gram <- function() {
+    
+    # reset discount in case function is run twice
+    two_gram[, disc := 1]
+    
+    # apparently if the frequency is over 5 for the ngram then it's reliable enough
+    for (i in 5:1) { # going backwards
+        curr_freq <- i
+        next_freq <- i + 1
+        
+        # do a count on rows that match the ith frequency and ith plus one
+        curr_count <- two_gram[freq == curr_freq, .N]
+        next_count <- two_gram[freq == next_freq, .N]
+        
+        # calculate the discount for the ith frequency
+        curr_disc <- (next_freq / curr_freq) * (next_count / curr_count)
+        
+        # kept the fix in just in case
+        two_gram[freq == curr_freq, disc := curr_disc][disc > 1, disc := 1]
+    }
+    # calculate leftover for each 'start' and fix the quirk again
+    two_gram[, leftover := (1 - freq * disc / sum(freq)), by = start][disc == 1, leftover := 0]
+}
+
+# run the discount functions
+discount_five_gram()
+discount_four_gram()
+discount_three_gram()
+discount_two_gram()
+
 # test_dt <- sample %>%
 #     readLines %>%
 #     data.table
@@ -104,4 +184,3 @@ discount_five_gram <- function() {
 #            remove_separators = TRUE)
 #
 # test_dfm <- dfm(test_corpus)
-
