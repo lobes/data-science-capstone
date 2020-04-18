@@ -52,7 +52,7 @@ five_gram <- twit_sample[stri_count_words(start) == 4]
 discount_five_gram <- function() {
 
     # reset discount in case function is run twice
-    five_gram[, disc := 1]
+    five_gram[, c("disc", "prob") := 1]
 
     # apparently if the frequency is over 5 for the ngram then it's reliable enough
     for (i in 5:1) { # going backwards
@@ -70,7 +70,8 @@ discount_five_gram <- function() {
         five_gram[freq == curr_freq, disc := curr_disc][disc > 1, disc := 1]
     }
     # calculate leftover for each 'start' and fix the quirk again
-    five_gram[, leftover := (1 - freq * disc / sum(freq)), by = start][disc == 1, leftover := 0]
+    five_gram[, leftover := (1 - freq * disc / sum(freq)), keyby = start][disc == 1, leftover := 0]
+    
 }
 
 # get ready for janky copies of the 5-gram function
