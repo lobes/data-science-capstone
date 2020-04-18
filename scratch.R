@@ -67,10 +67,10 @@ discount_five_gram <- function() {
 
         # have to reset some discounts to 1 due to quirk of sample data having equal numbers of 3, 4, and 5 frequency 5-grams
         five_gram[freq == curr_freq, disc := curr_disc][disc > 1, disc := 1]
-        
-        # calculate leftover probablilities
-        
     }
+    # calculate leftover for each 'start' and fix the quirk again
+    five_gram[, leftover := (1 - freq * disc / sum(freq)), by = start][disc == 1, leftover := 0]
+    
 }
 # test_dt <- sample %>%
 #     readLines %>%
