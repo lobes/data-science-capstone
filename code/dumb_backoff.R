@@ -62,6 +62,9 @@ DT[, c("base", "pred") := .(stri_replace_last_regex(., stri_c(" ", stri_extract_
 
 setkey(DT, base)[, group_freq := .N, by = base][, dumb_prob := freq / group_freq][, c(".", "freq", "group_freq") := NULL]
 
+max_DT <- DT[, .(max_dumb_prob = max(dumb_prob), pred = pred), by = base]
+
+
 get_dumb_pred <- function(string) {
     # pre-process the string to match DT format
     last_five_words <- string %>%
@@ -70,9 +73,9 @@ get_dumb_pred <- function(string) {
         unlist() %>%
         tail(n = 1L) %>%
         tokenize_words(simplify = TRUE) %>%
-        tail(n = 5L) %>%
+        tail(n = 4L) %>%
         stri_flatten(collapse = " ")
-        
+
     # now have a character vector containing the individual words from the last
-    print(DT[base == last_five_words, pred])
+    print(DT[base == last_five_words, .(dumb_prob, pred)][order(-dumb_prob), head(pred, 1L)])
 }
