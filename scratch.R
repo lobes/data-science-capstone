@@ -72,6 +72,9 @@ discount_five_gram <- function() {
     # calculate leftover for each 'start' and fix the quirk again
     five_gram[, leftover := (1 - freq * disc / sum(freq)), keyby = start][disc == 1, leftover := 0]
     
+    # 'get it done' solution to 5-gram probability
+    five_gram[, group_freq := sum(freq), by = start]
+    five_gram[, prob := freq/group_freq]
 }
 
 # get ready for janky copies of the 5-gram function
