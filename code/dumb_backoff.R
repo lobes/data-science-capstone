@@ -62,9 +62,6 @@ DT[, c("base", "pred") := .(stri_replace_last_regex(., stri_c(" ", stri_extract_
 
 setkey(DT, base)[, group_freq := .N, by = base][, dumb_prob := freq / group_freq][, c(".", "freq", "group_freq") := NULL]
 
-max_DT <- DT[, .(max_dumb_prob = max(dumb_prob), pred = pred), by = base]
-
-
 get_dumb_pred <- function(string) {
     # pre-process the string to match DT format
     last_five_words <- string %>%
