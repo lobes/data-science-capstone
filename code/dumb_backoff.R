@@ -40,21 +40,21 @@ library(stringi)
 # DT["search string", .(end, max(dumb_prob))]
 
 # try something fancy
-samples <- c(
-    "./data/sample/twitter_sample.txt",
-    "./data/sample/blogs_sample.txt",
-    "./data/sample/news_sample.txt"
+files <- c(
+    "./data/final/en_US/en_US.twitter.txt",
+    "./data/final/en_US/en_US.blogs.txt",
+    "./data/final/en_US/en_US.news.txt"
 )
 
-DT <- samples %>%
-    lapply(readLines, skipNul = TRUE) %>%
-    unlist() %>%
-    tokenize_sentences() %>%
-    unlist() %>%
-    tokenize_ngrams(n = 5L, n_min = 2L) %>%
-    unlist() %>%
-    as.data.table() %>%
-    na.omit
+DT <- files %>%
+    lapply(readLines, skipNul = TRUE)
+    # unlist() %>%
+    # tokenize_sentences() %>%
+    # unlist() %>%
+    # tokenize_ngrams(n = 5L, n_min = 2L) %>%
+    # unlist() %>%
+    # as.data.table() %>%
+    # na.omit
 
 DT[, freq := .N, by = .]
 
